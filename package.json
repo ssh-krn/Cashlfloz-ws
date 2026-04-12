@@ -15,7 +15,7 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs",
+  "type": "module",
   "bugs": {
     "url": "https://github.com/ssh-krn/Cashlfloz-ws/issues"
   },
@@ -24,8 +24,8 @@
     "ws": "^8.20.0"
   },
   "devDependencies": {
-    "typescript": "^6.0.2",
+    "@types/node": "^20.19.39",
     "@types/ws": "^8.5.10",
-    "@types/node": "^20.0.0"
+    "typescript": "^6.0.2"
   }
 }

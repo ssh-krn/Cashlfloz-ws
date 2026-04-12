@@ -1,8 +1,7 @@
-// server.ts (To be hosted on Koyeb)
-import { WebSocketServer, WebSocket } from 'ws';
-import * as http from 'http';
+const http = require('http');
+const { WebSocketServer, WebSocket } = require('ws');
 
-const PORT = process.env.PORT || 8080;
+const PORT = 8080;
 
 // 1. Create a basic HTTP Server
 const server = http.createServer((req, res) => {
@@ -44,7 +43,7 @@ let currentPrice = 64231.50;
 const dailyOpenPrice = 64000.00;
 const symbol = "BTC/USD";
 
-function generateNextPrice(price: number) {
+function generateNextPrice(price) {
   const volatility = 0.0005;
   const changePercent = 2 * volatility * Math.random() - volatility;
   return parseFloat((price + price * changePercent).toFixed(2));
@@ -56,7 +55,7 @@ setInterval(() => {
   const percentChange = ((currentPrice - dailyOpenPrice) / dailyOpenPrice) * 100;
 
   const payload = JSON.stringify({
-    type: 'ticker', // Tagging this as a ticker update
+    type: 'ticker',
     data: {
       symbol,
       price: currentPrice,
