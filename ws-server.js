@@ -41,9 +41,9 @@ console.log(`🚀 Cashfloz Custom WS/HTTP Server starting on port ${PORT}`);
 
 // Reasonable starting prices and daily opens
 const assets = {
-  "BTC/USD": { current: 64231.50, open: 64000.00, volatility: 0.0005 },
-  "ETH/USD": { current: 3450.20, open: 3420.00, volatility: 0.0007 },
-  "SOL/USD": { current: 145.60, open: 142.50, volatility: 0.0012 }
+  "BTC/USD": { current: 64231.50, open: 64000.00, volatility: 0.0005, symbol: "BTC" },
+  "ETH/USD": { current: 3450.20, open: 3420.00, volatility: 0.0007, symbol: "ETH" },
+  "SOL/USD": { current: 145.60, open: 142.50, volatility: 0.0012, symbol: "SOL" }
 };
 
 function generateNextPrice(assetKey) {
@@ -53,17 +53,54 @@ function generateNextPrice(assetKey) {
   return asset.current;
 }
 
-// 3. The 1-Second Ticker Loop (Sends updates for ALL assets)
-setInterval(() => {
-  Object.keys(assets).forEach(symbol => {
-    const asset = assets[symbol];
-    const currentPrice = generateNextPrice(symbol);
-    const percentChange = ((currentPrice - asset.open) / asset.open) * 100;
+// Order Book Generator logic (copied logic from api/trade/orderbook/route.ts)
+function generateOrderBook(symbol, basePrice) {
+  const mid = basePrice + (Math.random() - 0.5) * (basePrice * 0.0001);
 
-    const payload = JSON.stringify({
+  const rawAsks = Array.from({ length: 15 }, (_, i) => {
+    const price = parseFloat((mid + (basePrice * 0.0005) + Math.random() * (basePrice * 0.001) + i * (basePrice * 0.002)).toFixed(2));
+    const size  = parseFloat((Math.random() * (symbol === "BTC" ? 2 : 20) + 0.1).toFixed(3));
+    return { price, size: size.toFixed(3), depth: Math.random() * 100 };
+  });
+
+  const rawBids = Array.from({ length: 15 }, (_, i) => {
+    const price = parseFloat((mid - (basePrice * 0.0005) - Math.random() * (basePrice * 0.001) - i * (basePrice * 0.002)).toFixed(2));
+    const size  = parseFloat((Math.random() * (symbol === "BTC" ? 2 : 20) + 0.1).toFixed(3));
+    return { price, size: size.toFixed(3), depth: Math.random() * 100 };
+  });
+
+  const asks = rawAsks.sort((a, b) => b.price - a.price);
+  const bids = rawBids.sort((a, b) => b.price - a.price);
+
+  const bestAsk = asks[asks.length - 1].price;
+  const bestBid = bids[0].price;
+  const spread = parseFloat((bestAsk - bestBid).toFixed(2));
+
+  return { bids, asks, spread, midPrice: parseFloat(mid.toFixed(2)), symbol };
+}
+
+// Recent Trades Generator logic (to simulate "market" trades when price moves)
+function generateMockTrade(symbol, price) {
+  const type = Math.random() > 0.5 ? "buy" : "sell";
+  const amount = (Math.random() * (symbol === "BTC" ? 0.5 : 10) + 0.01).toFixed(3);
+  const time = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+  return { type, price: price.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }), amount, time, symbol };
+}
+
+// 3. The 1-Second Update Loop
+setInterval(() => {
+  Object.keys(assets).forEach(symbolKey => {
+    const asset = assets[symbolKey];
+    const currentPrice = generateNextPrice(symbolKey);
+    const percentChange = ((currentPrice - asset.open) / asset.open) * 100;
+    const symbol = asset.symbol;
+
+    // Ticker Payload
+    const tickerPayload = JSON.stringify({
       type: 'ticker',
       data: {
-        symbol,
+        symbol: symbolKey,
         price: currentPrice,
         value: currentPrice,
         time: Math.floor(Date.now() / 1000),
@@ -72,8 +109,27 @@ setInterval(() => {
       }
     });
 
+    // Orderbook Payload
+    const orderbookPayload = JSON.stringify({
+      type: 'orderbook',
+      data: generateOrderBook(symbol, currentPrice)
+    });
+
+    // Mock Trade Payload (occasional trades)
+    let tradePayload = null;
+    if (Math.random() > 0.7) {
+      tradePayload = JSON.stringify({
+        type: 'trade',
+        data: generateMockTrade(symbol, currentPrice)
+      });
+    }
+
     wss.clients.forEach((client) => {
-      if (client.readyState === WebSocket.OPEN) client.send(payload);
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(tickerPayload);
+        client.send(orderbookPayload);
+        if (tradePayload) client.send(tradePayload);
+      }
     });
   });
 }, 1000);
