@@ -48,8 +48,22 @@ const assets = {
 
 function generateNextPrice(assetKey) {
   const asset = assets[assetKey];
-  const changePercent = 2 * asset.volatility * Math.random() - asset.volatility;
-  asset.current = parseFloat((asset.current + asset.current * changePercent).toFixed(2));
+  
+  // 1. Random Walk (Standard market noise)
+  const randomChange = (Math.random() - 0.5) * 2 * asset.volatility;
+  
+  // 2. Mean Reversion (Gravity)
+  // Calculates how far the current price has drifted from the daily open
+  const distanceFromOpen = (asset.open - asset.current) / asset.open;
+  
+  // The stronger this number, the harder the price is pulled back to the open
+  const reversionStrength = 0.05; 
+  const gravity = distanceFromOpen * reversionStrength;
+
+  // 3. Combine them. The price wanders randomly, but is tethered to reality.
+  const totalChangePercent = randomChange + gravity;
+  
+  asset.current = parseFloat((asset.current + asset.current * totalChangePercent).toFixed(2));
   return asset.current;
 }
 
