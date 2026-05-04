@@ -39,11 +39,12 @@ const wss = new WebSocketServer({ server });
 
 console.log(`🚀 Cashfloz Custom WS/HTTP Server starting on port ${PORT}`);
 
-// Reasonable starting prices and daily opens
+// 🛡️ THE FIX: Synchronized with app/api/trade/candles/route.ts base prices
+// to ensure no "severe gaps" between historical and live data.
 const assets = {
-  "BTC/USD": { current: 71440.00, open: 64000.00, volatility: 0.0003, symbol: "BTC" },
-  "ETH/USD": { current: 3750.00, open: 3450.00, volatility: 0.0005, symbol: "ETH" },
-  "SOL/USD": { current: 120.00, open: 145.00, volatility: 0.0008, symbol: "SOL" }
+  "BTC/USD": { current: 64231.50, open: 64100.00, volatility: 0.0002, symbol: "BTC" },
+  "ETH/USD": { current: 3450.20, open: 3440.00, volatility: 0.0003, symbol: "ETH" },
+  "SOL/USD": { current: 145.60, open: 145.00, volatility: 0.0005, symbol: "SOL" }
 };
 
 function generateNextPrice(assetKey) {
