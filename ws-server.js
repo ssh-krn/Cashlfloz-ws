@@ -42,9 +42,9 @@ console.log(`🚀 Cashfloz Custom WS/HTTP Server starting on port ${PORT}`);
 // 🛡️ THE FIX: Synchronized with app/api/trade/candles/route.ts base prices
 // to ensure no "severe gaps" between historical and live data.
 const assets = {
-  "BTC/USD": { current: 64231.50, open: 64100.00, volatility: 0.0002, symbol: "BTC" },
-  "ETH/USD": { current: 3450.20, open: 3440.00, volatility: 0.0003, symbol: "ETH" },
-  "SOL/USD": { current: 145.60, open: 145.00, volatility: 0.0005, symbol: "SOL" }
+  "BTC/USD": { current: 102165.50, open: 102165.00, volatility: 0.0002, symbol: "BTC" },
+  "ETH/USD": { current: 5866.20, open: 5840.00, volatility: 0.0003, symbol: "ETH" },
+  "SOL/USD": { current: 250.60, open: 245.00, volatility: 0.0005, symbol: "SOL" }
 };
 
 function generateNextPrice(assetKey) {
